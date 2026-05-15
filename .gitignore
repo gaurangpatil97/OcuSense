@@ -23,4 +23,13 @@ Thumbs.db
 # Data files
 *.csv
 *.zip
+*.xlsx
+
+# Dataset images and folders
+ocular-disease-recognition-odir5k/
 data/
+
+# Test images
+*.jpg
+*.jpeg
+*.png

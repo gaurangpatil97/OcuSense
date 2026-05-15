@@ -1,0 +1,9 @@
+{
+    "best_val_accuracy": 47.93,
+    "final_val_accuracy": 47.93,
+    "weighted_f1": 0.4736,
+    "macro_f1": 0.52,
+    "total_epochs": 20,
+    "model": "EfficientNet-B3",
+    "num_classes": 8
+}
