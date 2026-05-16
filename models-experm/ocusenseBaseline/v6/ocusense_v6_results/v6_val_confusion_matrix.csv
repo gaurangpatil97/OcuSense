@@ -1,0 +1,7 @@
+,Normal,Diabetic Retinopathy,Glaucoma,Cataract,Myopia,Other
+Normal,264,58,24,5,0,37
+Diabetic Retinopathy,86,143,2,1,1,27
+Glaucoma,16,3,35,0,1,2
+Cataract,4,0,0,47,0,3
+Myopia,0,0,0,0,24,0
+Other,39,27,5,3,2,100

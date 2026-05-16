@@ -1,0 +1,30 @@
+{
+    "model": "OcuSense V6",
+    "backbone": "EfficientNet-B3",
+    "num_classes": 6,
+    "classes": [
+        "Normal",
+        "Diabetic Retinopathy",
+        "Glaucoma",
+        "Cataract",
+        "Myopia",
+        "Other"
+    ],
+    "merged_into_other": [
+        "AMD",
+        "Hypertensive Retinopathy"
+    ],
+    "best_val_acc": 63.92075078206465,
+    "best_macro_f1": 0.6952345424739063,
+    "test_accuracy": 65.31,
+    "test_macro_f1": 0.6701,
+    "test_weighted_f1": 0.654,
+    "per_class_f1": {
+        "Normal": 0.704,
+        "Diabetic Retinopathy": 0.5955,
+        "Glaucoma": 0.4727,
+        "Cataract": 0.8411,
+        "Myopia": 0.8649,
+        "Other": 0.5423
+    }
+}

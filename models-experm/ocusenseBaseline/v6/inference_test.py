@@ -1,13 +1,15 @@
-# OcuSense V6 — Standalone Inference Script
+# OcuSense V6 — Inference Test Script
+# Tests 8 images per class from the dataset
 # 6 Classes: Normal, Diabetic Retinopathy, Glaucoma, Cataract, Myopia, Other
-# AMD and Hypertensive Retinopathy merged into Other
 
 import torch
 import torch.nn as nn
 from torchvision import transforms, models
 from PIL import Image
-import sys
+import pandas as pd
 import os
+import ast
+from sklearn.model_selection import train_test_split
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 DISEASE_NAMES = [
@@ -19,7 +21,18 @@ DISEASE_NAMES = [
     'Other'
 ]
 
-# ── Model Architecture (must match V6 exactly) ─────────────────────────────────
+MERGE_MAP = {
+    'N': 0, 'D': 1, 'G': 2,
+    'C': 3, 'M': 4,
+    'A': 5, 'H': 5, 'O': 5,
+}
+
+MODEL_PATH        = r'C:\Users\gaura\Desktop\Eye Disease Detection\models-experm\ocusenseBaseline\v6\ocusense_v6_best.pth'
+IMG_DIR           = r'C:\Users\gaura\Desktop\Eye Disease Detection\ocular-disease-recognition-odir5k\preprocessed_images'
+CSV_PATH          = r'C:\Users\gaura\Desktop\Eye Disease Detection\ocular-disease-recognition-odir5k\full_df.csv'
+SAMPLES_PER_CLASS = 8
+
+# ── Model Architecture (V6) ────────────────────────────────────────────────────
 class OcuSenseV6(nn.Module):
     def __init__(self, num_classes=6):
         super(OcuSenseV6, self).__init__()
@@ -36,7 +49,7 @@ class OcuSenseV6(nn.Module):
     def forward(self, x):
         return self.backbone(x)
 
-# ── Inference Transform (must match training exactly) ──────────────────────────
+# ── Inference Transform ────────────────────────────────────────────────────────
 inference_transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
@@ -47,50 +60,89 @@ inference_transform = transforms.Compose([
 ])
 
 # ── Load Model ─────────────────────────────────────────────────────────────────
-def load_model(model_path):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model  = OcuSenseV6(num_classes=6).to(device)
-    model.load_state_dict(torch.load(model_path, map_location=device))
-    model.eval()
-    print(f"Model loaded on {device}")
-    return model, device
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model  = OcuSenseV6(num_classes=6).to(device)
+model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+model.eval()
+print(f"Model loaded on {device}\n")
 
-# ── Predict ────────────────────────────────────────────────────────────────────
-def predict(model, device, image_path):
-    image  = Image.open(image_path).convert('RGB')
-    tensor = inference_transform(image).unsqueeze(0).to(device)
+# ── Load CSV & Recreate Test Split (same as training) ─────────────────────────
+df = pd.read_csv(CSV_PATH)
+df['label_str']     = df['labels'].apply(lambda x: ast.literal_eval(x)[0])
+df['label_encoded'] = df['label_str'].apply(lambda x: MERGE_MAP[x])
 
-    with torch.no_grad():
-        outputs     = model(tensor)
-        probs       = torch.softmax(outputs, dim=1)[0]
-        conf, pred  = probs.max(0)
+# Recreate exact same patient level split used in V6 training
+unique_patients     = df['ID'].unique()
+train_ids, temp_ids = train_test_split(unique_patients, test_size=0.30, random_state=42)
+val_ids,   test_ids = train_test_split(temp_ids,        test_size=0.50, random_state=42)
+test_df             = df[df['ID'].isin(test_ids)].reset_index(drop=True)
 
-    predicted_disease = DISEASE_NAMES[pred.item()]
-    confidence_pct    = conf.item() * 100
+print(f"Test set size: {len(test_df)} images")
+print(f"Sampling {SAMPLES_PER_CLASS} images per class from TRUE test set\n")
 
-    print(f"\n{'='*50}")
-    print(f"OcuSense V6 — Prediction")
-    print(f"{'='*50}")
-    print(f"Image      : {os.path.basename(image_path)}")
-    print(f"Prediction : {predicted_disease}")
-    print(f"Confidence : {confidence_pct:.2f}%")
-    print(f"\nAll class probabilities:")
-    for name, prob in zip(DISEASE_NAMES, probs):
-        bar = '█' * int(prob.item() * 40)
-        print(f"  {name:<28} {prob.item()*100:5.2f}%  {bar}")
-    print(f"{'='*50}")
+# ── Test Per Class ─────────────────────────────────────────────────────────────
+TEST_CLASSES = {
+    0: ('Normal',               ['N']),
+    1: ('Diabetic Retinopathy', ['D']),
+    2: ('Glaucoma',             ['G']),
+    3: ('Cataract',             ['C']),
+    4: ('Myopia',               ['M']),
+    5: ('Other',                ['O', 'A', 'H']),
+}
 
-    return predicted_disease, confidence_pct
+correct = 0
+total   = 0
 
-# ── Main ───────────────────────────────────────────────────────────────────────
-if __name__ == '__main__':
-    MODEL_PATH = r'C:\Users\gaura\Desktop\Eye Disease Detection\models-experm\ocusenseBaseline\v6\ocusense_v6_best.pth'
-    IMAGE_PATH = sys.argv[1] if len(sys.argv) > 1 else None
+for class_idx, (class_name, source_codes) in TEST_CLASSES.items():
+    # Sample from test set only
+    class_df = test_df[test_df['label_str'].isin(source_codes)]
+    samples  = class_df.sample(min(SAMPLES_PER_CLASS, len(class_df)), random_state=42)
 
-    if not IMAGE_PATH:
-        print("Usage: python inference_v6.py <path_to_image>")
-        print("Example: python inference_v6.py retinal_image.jpg")
-        sys.exit(1)
+    print(f"\n{'='*60}")
+    print(f"CLASS: {class_name} (encoded: {class_idx})")
+    if len(source_codes) > 1:
+        print(f"  Includes merged: {source_codes}")
+    print(f"  Available in test set: {len(class_df)}")
+    print(f"{'='*60}")
 
-    model, device = load_model(MODEL_PATH)
-    predict(model, device, IMAGE_PATH)
+    for _, row in samples.iterrows():
+        img_path = os.path.join(IMG_DIR, row['filename'])
+
+        try:
+            image  = Image.open(img_path).convert('RGB')
+            tensor = inference_transform(image).unsqueeze(0).to(device)
+
+            with torch.no_grad():
+                outputs    = model(tensor)
+                probs      = torch.softmax(outputs, dim=1)[0]
+                conf, pred = probs.max(0)
+
+            predicted     = DISEASE_NAMES[pred.item()]
+            is_correct    = pred.item() == class_idx
+            correct      += 1 if is_correct else 0
+            total        += 1
+            status        = '✓' if is_correct else '✗'
+            original_code = row['label_str']
+
+            print(f"  {status} File: {row['filename']} (original: {original_code})")
+            print(f"    Real      : {class_name}")
+            print(f"    Predicted : {predicted} ({conf.item()*100:.2f}%)")
+
+        except Exception as e:
+            print(f"  Error loading {row['filename']}: {e}")
+
+# ── Summary ────────────────────────────────────────────────────────────────────
+print(f"\n{'='*60}")
+print(f"SUMMARY — OcuSense V6 (Test Set Images)")
+print(f"{'='*60}")
+print(f"Samples per class : {SAMPLES_PER_CLASS}")
+print(f"Total tested      : {total}")
+print(f"Correct           : {correct}")
+print(f"Accuracy          : {correct/total*100:.2f}%")
+print(f"\nNote: AMD and Hypertensive Retinopathy merged into Other")
+print(f"Note: All images sampled from TRUE unseen test set only")
+
+
+# ── Save Output to File ────────────────────────────────────────────────────────
+import sys
+from io import StringIO

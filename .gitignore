@@ -1,9 +1,63 @@
-# Virtual Environment
-modelsvenv/
+# # Virtual Environment
+# modelsvenv/
 
-# Model weights
+# # Model weights
+# *.pth
+# *.pt
+
+# # Python cache
+# __pycache__/
+# *.pyc
+# *.pyo
+
+# # Jupyter checkpoints
+# .ipynb_checkpoints/
+
+# # OS files
+# .DS_Store
+# Thumbs.db
+
+# # Environment variables
+# .env
+
+# # Data files
+# *.csv
+# *.zip
+# *.xlsx
+
+# # Dataset images and folders
+# ocular-disease-recognition-odir5k/
+# data/
+
+# # Test images
+# *.jpg
+# *.jpeg
+# *.png
+
+# # --- Repository Specific Exceptions ---
+
+# # Exception to allow OcuSense v6 model weights (needed by backend API and teammate)
+# !**/v6/ocusense_v6_best.pth
+# !**/backend/ocusense_v6_best.pth
+
+# # Exceptions to allow experiment results (confusion matrices, training curves, CSV reports)
+# !models-experm/**/*.png
+# !models-experm/**/*.csv
+
+
+
+
+# Virtual Environments
+modelsvenv/
+backendvenv/
+frontend/node_modules/
+frontend/.next/
+
+# Model weights (all except v6)
 *.pth
 *.pt
+!**/v6/ocusense_v6_best.pth
+!**/backend/ocusense_v6_best.pth
 
 # Python cache
 __pycache__/
@@ -20,16 +74,22 @@ Thumbs.db
 # Environment variables
 .env
 
-# Data files
-*.csv
-*.zip
-*.xlsx
-
-# Dataset images and folders
+# Dataset — never push raw data
 ocular-disease-recognition-odir5k/
 data/
 
-# Test images
+# Raw image files everywhere EXCEPT results folders
 *.jpg
 *.jpeg
-*.png
+!models-experm/**/*.png
+
+# Zip files
+*.zip
+
+# Data files at root level
+*.xlsx
+*.csv
+!models-experm/**/*.csv
+
+# Kaggle notebooks output cache
+.virtual_documents/
