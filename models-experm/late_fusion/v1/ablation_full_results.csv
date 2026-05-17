@@ -1,0 +1,8 @@
+Configuration,Accuracy,Macro F1,Notes
+Image Only (V6),0.653125,0.6700687340349895,Baseline
+Metadata Age Only,0.20520833333333333,0.16097772461559473,Pre-diagnostic
+Metadata Age + Sex,0.23333333333333334,0.19629365662504297,Pre-diagnostic
+Metadata Oracle,0.9854166666666667,0.9846519131887348,Post-diagnostic
+Fusion: Image + Age,0.6479166666666667,0.6584826057008527,True Multimodal
+Fusion: Image + Age + Sex,0.6447916666666667,0.6583758667882913,True Multimodal
+Fusion: Image + Oracle,0.9875,0.9861103383956865,Oracle Upper Bound

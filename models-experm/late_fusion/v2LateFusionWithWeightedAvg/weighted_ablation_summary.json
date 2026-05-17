@@ -1,0 +1,45 @@
+{
+    "baseline_image_only": {
+        "accuracy": 0.653125,
+        "macro_f1": 0.6700687340349895
+    },
+    "baseline_metadata_age_only": {
+        "accuracy": 0.20520833333333333,
+        "macro_f1": 0.16097772461559473
+    },
+    "baseline_metadata_age_sex": {
+        "accuracy": 0.23333333333333334,
+        "macro_f1": 0.19629365662504297
+    },
+    "baseline_metadata_oracle": {
+        "accuracy": 0.9854166666666667,
+        "macro_f1": 0.9846519131887348
+    },
+    "best_fusion_image_age": {
+        "best_weight": {
+            "w_img": 0.95,
+            "w_meta": 0.05
+        },
+        "accuracy": 0.6541666666666667,
+        "macro_f1": 0.6707070376579,
+        "vs_baseline_acc_change": 0.10416666666667185
+    },
+    "best_fusion_image_age_sex": {
+        "best_weight": {
+            "w_img": 0.95,
+            "w_meta": 0.05
+        },
+        "accuracy": 0.6541666666666667,
+        "macro_f1": 0.6707070376579,
+        "vs_baseline_acc_change": 0.10416666666667185
+    },
+    "best_fusion_image_oracle": {
+        "best_weight": {
+            "w_img": 0.5,
+            "w_meta": 0.5
+        },
+        "accuracy": 0.9875,
+        "macro_f1": 0.9861103383956865,
+        "vs_baseline_acc_change": 33.43750000000001
+    }
+}
